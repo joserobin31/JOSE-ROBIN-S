@@ -1,0 +1,582 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Staff Desk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700&family=Hanken+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#14213d;--ink2:#22325a;--paper:#f4f5f8;--line:#e2e5ec;--tx:#1b2333;--mut:#667085;--sun:#f2a516;font-family:"Hanken Grotesk",system-ui,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--tx);font-size:15px;line-height:1.5}
+h1,h2,h3,.brand{font-family:"Bricolage Grotesque",system-ui,sans-serif;margin:0}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--sun);outline-offset:2px}
+.mut{color:var(--mut)}small{color:var(--mut)}
+
+/* sign in / sign up */
+.auth{min-height:100vh;display:grid;grid-template-columns:1.1fr 1fr}
+.hero{background:var(--ink);color:#fff;padding:12vh 8%;display:flex;flex-direction:column;justify-content:center;gap:16px}
+.hero h1{font-size:clamp(2.4rem,5vw,4rem);line-height:1}
+.hero p{max-width:34ch;color:#b8c1d9;margin:0}
+.strip{display:flex;gap:10px;margin-top:24px}
+.strip span{width:52px;height:64px;border-radius:10px;display:grid;place-items:center;font:700 1.6rem "Bricolage Grotesque",sans-serif;background:#1d2d52;opacity:0;transform:translateY(14px);
+  animation:rise .5s calc(var(--i)*90ms) forwards,beam 6s calc(1s + var(--i)*1s) infinite}
+@keyframes rise{to{opacity:1;transform:none}}
+@keyframes beam{0%,16%{background:var(--sun);color:var(--ink);transform:translateY(-6px)}17%,100%{background:#1d2d52;color:#fff;transform:none}}
+.panel{display:grid;align-content:center;padding:6vh 10%;gap:18px;animation:fade .4s}
+.tabs{display:flex;gap:6px;background:#e9ecf3;padding:4px;border-radius:10px;width:max-content;margin-bottom:14px}
+.tabs button{border:0;background:none;padding:8px 16px;border-radius:8px;cursor:pointer;transition:.2s}
+.tabs .on{background:#fff;box-shadow:0 1px 3px #0002;font-weight:600}
+form label{display:grid;gap:4px;font-weight:500;font-size:.9rem;margin-bottom:12px}
+input,select{border:1px solid var(--line);border-radius:8px;padding:9px 11px;background:#fff;width:100%;transition:border-color .2s,box-shadow .2s}
+input:focus,select:focus{border-color:var(--ink2);box-shadow:0 0 0 3px #22325a22;outline:none}
+.seg{display:flex;gap:8px;margin-bottom:12px}
+.seg label{flex:1;margin:0;position:relative}
+.seg input{position:absolute;opacity:0;width:0;height:0}
+.seg span{display:block;text-align:center;padding:9px;border:1px solid var(--line);border-radius:8px;cursor:pointer;transition:.2s;background:#fff}
+.seg input:checked+span{background:var(--ink);color:#fff;border-color:var(--ink)}
+.seg input:focus-visible+span{outline:2px solid var(--sun)}
+.hint{color:var(--mut);font-size:.85rem;margin:10px 0 0}
+.hold{max-width:420px;margin:15vh auto;display:grid;gap:12px}
+
+/* buttons */
+.btn{border:0;background:var(--ink);color:#fff;padding:9px 16px;border-radius:9px;cursor:pointer;font-weight:600;position:relative;transition:transform .15s,background .2s,box-shadow .2s}
+.btn:hover{background:var(--ink2);box-shadow:0 6px 14px #14213d33;transform:translateY(-1px)}
+.btn:active{transform:scale(.97)}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.btn.ghost:hover{background:#eef0f6;box-shadow:none}
+.btn.sm{padding:5px 10px;font-size:.85rem}
+.btn.wide{width:100%}
+.btn.sel{background:var(--ink);color:#fff;border-color:var(--ink)}
+.btn.sel[data-v=present]{background:#17713f;border-color:#17713f}
+.btn.sel[data-v=absent]{background:#b42318;border-color:#b42318}
+.btn.load{pointer-events:none;color:transparent}
+.btn.load::after{content:"";position:absolute;inset:0;margin:auto;width:18px;height:18px;border:2px solid #fff6;border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* app shell */
+.shell{display:grid;grid-template-columns:230px 1fr;min-height:100vh}
+aside{background:var(--ink);color:#fff;padding:20px 14px;display:flex;flex-direction:column;gap:18px;position:sticky;top:0;height:100vh}
+.brand{font-size:1.3rem;padding:0 10px}
+nav{display:grid;gap:2px;overflow:auto}
+nav button{background:none;border:0;color:#b8c1d9;text-align:left;padding:9px 12px;border-radius:8px;cursor:pointer;transition:.2s}
+nav button:hover{background:#ffffff14;color:#fff;padding-left:16px}
+nav .on{background:#ffffff1f;color:#fff;box-shadow:inset 3px 0 var(--sun)}
+.me{margin-top:auto;display:grid;gap:2px;padding:0 6px}
+.me small{color:#b8c1d9}
+.me .btn{margin-top:8px;color:#fff;border-color:#ffffff44}
+#view{padding:28px clamp(16px,4vw,44px);animation:fade .25s;min-width:0}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}}
+.ph{display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;align-items:center;margin-bottom:18px}
+.ph h2{font-size:1.7rem}
+.tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.tools input,.tools select{width:auto}
+
+/* content */
+.card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:6px;overflow-x:auto;margin-bottom:18px}
+.card.pad{padding:18px}
+.card h3{margin-bottom:8px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:18px}
+.stat{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px;transition:transform .2s,box-shadow .2s}
+.stat:hover{transform:translateY(-3px);box-shadow:0 10px 22px #14213d1a}
+.stat b{display:block;font:700 2.1rem "Bricolage Grotesque",sans-serif;line-height:1.1}
+.stat span{color:var(--mut);font-size:.88rem}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+ul{list-style:none;padding:0;margin:8px 0 0;display:grid;gap:6px}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{color:var(--mut);font-weight:500;font-size:.85rem}
+tbody tr{transition:background .15s}
+tbody tr:hover{background:#f7f8fb}
+tr:last-child td{border:0}
+.dim{opacity:.55}
+.act{text-align:right}
+.act .btn{margin-left:6px}
+.empty{padding:36px;text-align:center;color:var(--mut)}
+.pers{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.per{display:grid;gap:6px;padding:12px;border:1px solid var(--line);border-radius:10px}
+.big{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.big .btn{padding:12px 28px;font-size:1rem}
+
+/* status badges */
+.b{display:inline-block;padding:2px 10px;border-radius:99px;font-size:.8rem;font-weight:600;animation:pop .3s}
+@keyframes pop{from{transform:scale(.7);opacity:0}}
+.b.present,.b.active,.b.assigned{background:#e2f5ea;color:#17713f}
+.b.absent,.b.inactive,.b.cancelled{background:#fde8e6;color:#b42318}
+.b.available{background:#e1ecfb;color:#1d5fbf}
+.b.unavailable,.b.pending{background:#eceef3;color:#475467}
+.b.free{background:#ede7fb;color:#5b3fb0}
+.b.unable,.b.req{background:#fdf0d5;color:#9a5b05}
+.b.req::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:#e08a00;margin-right:6px;animation:pulse 1.4s infinite}
+@keyframes pulse{50%{transform:scale(1.7);opacity:.35}}
+
+/* modal, toast, loading */
+.scrim{position:fixed;inset:0;background:#0b1226aa;display:grid;place-items:center;padding:16px;z-index:20;animation:fadeIn .18s;backdrop-filter:blur(2px)}
+.scrim.out{opacity:0;transition:opacity .18s}
+.dlg{background:#fff;border-radius:14px;padding:22px;width:min(440px,100%);max-height:90vh;overflow:auto;animation:dlg .22s cubic-bezier(.2,.9,.3,1.2)}
+.dlg h3{margin-bottom:12px}
+@keyframes fadeIn{from{opacity:0}}
+@keyframes dlg{from{transform:translateY(14px) scale(.94);opacity:0}}
+.row{display:flex;gap:8px}
+.row.end{justify-content:flex-end;margin-top:6px}
+#toasts{position:fixed;right:16px;bottom:16px;display:grid;gap:8px;z-index:30}
+.toast{background:var(--ink);color:#fff;padding:11px 16px;border-radius:10px;border-left:4px solid #3ecf8e;box-shadow:0 10px 24px #0004;animation:slide .3s cubic-bezier(.2,.9,.3,1.2)}
+.toast.err{border-color:#ff6b5e}
+.toast.out{opacity:0;transform:translateX(30px);transition:.3s}
+@keyframes slide{from{transform:translateX(40px);opacity:0}}
+.sk{height:84px;border-radius:12px;margin-bottom:12px;background:linear-gradient(90deg,#e8ebf2 25%,#f4f5f8 50%,#e8ebf2 75%);background-size:200% 100%;animation:sh 1.2s infinite}
+@keyframes sh{to{background-position:-200% 0}}
+
+@media(max-width:800px){
+  .auth{grid-template-columns:1fr}.hero{padding:8vh 8% 4vh}
+  .shell{grid-template-columns:1fr}
+  aside{position:static;height:auto;flex-direction:row;flex-wrap:wrap;align-items:center;padding:12px}
+  nav{display:flex;overflow-x:auto;width:100%;order:3}nav button{white-space:nowrap}
+  .me{margin:0 0 0 auto;display:flex;align-items:center;gap:10px}.me .btn{margin:0}
+}
+@media(prefers-reduced-motion:reduce){*,::before,::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+
+.sql{max-height:40vh;overflow:auto;background:#f4f5f8;padding:12px;border-radius:8px;font-size:.78rem;white-space:pre;margin:0}
+
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="modal"></div>
+<div id="toasts" aria-live="polite"></div>
+<script type="text/plain" id="schema">
+-- Staff Desk: run once in Supabase > SQL Editor.
+-- Before running: Authentication > Providers > Email > turn OFF "Confirm email"
+-- (logins use username@college.local, so there is no inbox to confirm).
+
+create table departments(id uuid primary key default gen_random_uuid(), name text unique not null, active boolean not null default true);
+create table staff(id uuid primary key default gen_random_uuid(), staff_code text unique not null, name text not null, email text, phone text, designation text,
+  department_id uuid references departments, active boolean not null default true);
+create table classes(id uuid primary key default gen_random_uuid(), name text unique not null, department_id uuid references departments);
+create table subjects(id uuid primary key default gen_random_uuid(), name text unique not null);
+create table profiles(id uuid primary key references auth.users on delete cascade, username text unique not null, full_name text,
+  role text not null default 'student' check (role in ('admin','staff','student')),
+  status text not null default 'pending' check (status in ('pending','active','inactive')),
+  staff_id uuid unique references staff, department_id uuid references departments on delete set null);
+create unique index one_admin on profiles(role) where role='admin';
+create table settings(id int primary key default 1 check (id=1), academic_day int not null default 1 check (academic_day>=1));
+insert into settings default values;
+create table period_slots(pattern char(1) check (pattern in ('A','B','C','D','E','F')), period int check (period between 1 and 5),
+  start_time time, end_time time, class_id uuid references classes, subject_id uuid references subjects, staff_id uuid references staff,
+  primary key(pattern,period));
+insert into period_slots(pattern,period) select p,n from unnest(array['A','B','C','D','E','F']) p, generate_series(1,5) n; -- 30 empty slots
+create table attendance(staff_id uuid references staff on delete cascade, day date not null, status text not null check (status in ('present','absent')), primary key(staff_id,day));
+create table availability(staff_id uuid references staff on delete cascade, day date not null, period int not null check (period between 1 and 5),
+  status text not null check (status in ('available','unavailable','free','unable')), primary key(staff_id,day,period));
+create table substitutions(day date not null, pattern char(1) not null, period int not null, substitute_id uuid references staff,
+  status text not null default 'assigned' check (status in ('assigned','cancelled')), primary key(day,pattern,period),
+  foreign key(pattern,period) references period_slots);
+
+-- Helpers (security definer so policies never recurse into profiles)
+create function is_active() returns boolean language sql stable security definer set search_path=public as
+  $$ select exists(select 1 from profiles where id=auth.uid() and status='active') $$;
+create function is_admin() returns boolean language sql stable security definer set search_path=public as
+  $$ select exists(select 1 from profiles where id=auth.uid() and role='admin' and status='active') $$;
+create function my_staff() returns uuid language sql stable security definer set search_path=public as
+  $$ select staff_id from profiles where id=auth.uid() and role='staff' and status='active' $$;
+create function today_ist() returns date language sql stable as $$ select (now() at time zone 'Asia/Kolkata')::date $$;
+
+-- Sign-up: only 'student' or 'staff' can ever be requested. Staff start as pending; admin is never created here.
+create function handle_new_user() returns trigger language plpgsql security definer set search_path=public as $$
+declare r text := case new.raw_user_meta_data->>'role' when 'staff' then 'staff' else 'student' end;
+        d uuid;
+begin
+  select id into d from departments where id::text = new.raw_user_meta_data->>'department_id' and active;
+  insert into profiles(id,username,full_name,role,status,department_id)
+  values(new.id, lower(split_part(new.email,'@',1)), new.raw_user_meta_data->>'full_name', r, case when r='staff' then 'pending' else 'active' end, d);
+  return new;
+end $$;
+create trigger on_auth_user_created after insert on auth.users for each row execute function handle_new_user();
+
+-- Students see names and designation only (no phone/email)
+create view staff_directory as select id,name,department_id,designation from staff where active and is_active();
+grant select on staff_directory to authenticated;
+
+-- Public list of active departments for the sign-up page (names only)
+create function list_departments() returns table(id uuid, name text) language sql stable security definer set search_path=public as
+  $$ select d.id, d.name from departments d where d.active order by d.name $$;
+revoke execute on function list_departments() from public;
+grant execute on function list_departments() to anon, authenticated;
+
+-- Row Level Security
+alter table profiles enable row level security;
+create policy profiles_self on profiles for select using (id=auth.uid());
+create policy profiles_admin on profiles for all using (is_admin()) with check (is_admin());
+alter table staff enable row level security;
+create policy staff_read on staff for select using (is_admin() or id=my_staff());
+create policy staff_admin on staff for all using (is_admin()) with check (is_admin());
+
+do $$ declare t text; begin
+  foreach t in array array['departments','classes','subjects','period_slots','settings','attendance','availability','substitutions'] loop
+    execute format('alter table %I enable row level security', t);
+    execute format('create policy "%1$s_read" on %1$I for select using (is_active())', t);
+    execute format('create policy "%1$s_admin" on %1$I for all using (is_admin()) with check (is_admin())', t);
+  end loop;
+end $$;
+
+-- Staff write ONLY their own rows, and only for today
+create policy att_own on attendance for all using (staff_id=my_staff() and day=today_ist()) with check (staff_id=my_staff() and day=today_ist());
+create policy avail_own on availability for all using (staff_id=my_staff() and day=today_ist()) with check (staff_id=my_staff() and day=today_ist());
+
+-- ADMIN SETUP (after this script):
+-- 1. Dashboard > Authentication > Users > Add user: email joseadmin@college.local, set the password there
+--    (Supabase stores only a bcrypt hash). Do this BEFORE anyone signs up.
+-- 2. Then run:  update profiles set role='admin', status='active' where username='joseadmin';
+
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+'use strict';
+// Paste your Supabase project values. The anon key is public by design: Row Level Security guards every table.
+const SUPABASE_URL = 'https://kucphvnrthdaycvizdqp.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_5XOR0RKWI2mSt26GZKqMWQ_xjV8aWWI';
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { detectSessionInUrl: false, lock: (name, wait, fn) => fn() } });
+
+const $ = (s, r = document) => r.querySelector(s);
+const PAT = 'ABCDEF', S = {}, V = {};
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const today = () => new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+const patOf = n => PAT[(n - 1) % 6];
+const nm = (a, id) => a.find(x => x.id === id)?.name || '—';
+const tm = t => t ? t.slice(0, 5) : '—';
+const BADGE = { present: 'Present', absent: 'Absent', available: 'Available', unavailable: 'Unavailable', free: 'Free period', unable: 'Unable to attend',
+  req: 'Substitution required', assigned: 'Substitution assigned', cancelled: 'Cancelled', active: 'Active', inactive: 'Inactive', pending: 'Pending' };
+const badge = k => `<span class="b ${k}">${BADGE[k] || esc(k)}</span>`;
+const head = (t, x = '') => `<header class="ph"><h2>${t}</h2>${x}</header>`;
+const depOpts = () => S.dep.map(d => [d.id, d.name]);
+const patSlots = p => S.slots.filter(s => s.pattern === p).sort((a, b) => a.period - b.period);
+
+function toast(m, t = 'ok') {
+  const e = document.createElement('div'); e.className = 'toast ' + t; e.textContent = m; $('#toasts').append(e);
+  setTimeout(() => { e.classList.add('out'); setTimeout(() => e.remove(), 300); }, 3200);
+}
+async function ok(p) { const { data, error } = await p; if (error) { toast(error.message, 'err'); throw error; } return data; }
+function count(el) {
+  const n = +el.dataset.n, t0 = performance.now();
+  (function f(t) { const k = Math.min(1, (t - t0) / 700); el.textContent = Math.round(n * (1 - Math.pow(1 - k, 3))); if (k < 1) requestAnimationFrame(f); })(t0);
+}
+
+/* ---------- modal helpers ---------- */
+function modal(html, mount) {
+  const m = $('#modal'); m.innerHTML = `<div class="scrim"><div class="dlg">${html}</div></div>`;
+  $('.scrim', m).onclick = e => { if (e.target.classList.contains('scrim')) closeModal(); };
+  mount && mount(m);
+}
+function closeModal() { const s = $('#modal .scrim'); if (!s) return; s.classList.add('out'); setTimeout(() => $('#modal').innerHTML = '', 180); }
+function confirmBox(msg, fn) {
+  modal(`<h3>Please confirm</h3><p>${esc(msg)}</p><div class="row end"><button class="btn ghost" data-x>Cancel</button><button class="btn" data-go>Confirm</button></div>`,
+    m => { $('[data-x]', m).onclick = closeModal; $('[data-go]', m).onclick = async () => { closeModal(); await fn(); }; });
+}
+function form(title, fields, vals, save) {
+  const f = fields.map(x => {
+    const v = vals[x.k] ?? '';
+    const inp = x.t === 'select'
+      ? `<select name="${x.k}"><option value="">Not set</option>${x.opts().map(([a, b]) => `<option value="${esc(a)}"${a == v ? ' selected' : ''}>${esc(b)}</option>`).join('')}</select>`
+      : `<input name="${x.k}" type="${x.t || 'text'}" value="${esc(v)}"${x.req ? ' required' : ''}${x.min ? ` min="${x.min}"` : ''}>`;
+    return `<label>${x.l}${inp}</label>`;
+  }).join('');
+  modal(`<h3>${title}</h3><form>${f}<div class="row end"><button type="button" class="btn ghost" data-x>Cancel</button><button class="btn">Save</button></div></form>`, m => {
+    $('[data-x]', m).onclick = closeModal;
+    $('form', m).onsubmit = async e => {
+      e.preventDefault(); const d = Object.fromEntries(new FormData(e.target)); for (const k in d) if (d[k] === '') d[k] = null;
+      try { await save(d); closeModal(); } catch (_) { /* toast already shown */ }
+    };
+  });
+}
+
+/* ---------- sign up / sign in ---------- */
+function authView(mode = 'in') {
+  const up = mode === 'up';
+  $('#app').innerHTML = `<main class="auth"><section class="hero"><h1>Staff Desk</h1><p>Attendance, availability and substitutions for the college day.</p>
+    <div class="strip">${[...PAT].map((p, i) => `<span style="--i:${i}">${p}</span>`).join('')}</div></section>
+    <section class="panel"><div class="tabs"><button class="${up ? '' : 'on'}" data-m="in">Sign in</button><button class="${up ? 'on' : ''}" data-m="up">Sign up</button></div>
+    <form id="af">${up ? `<label>Full name<input name="n" required autocomplete="name"></label>
+      <div class="seg"><label><input type="radio" name="r" value="student" checked><span>Student</span></label><label><input type="radio" name="r" value="staff"><span>Staff</span></label></div>
+      <label>Department<select name="dep" id="dep" disabled><option value="">Loading departments...</option></select></label>` : ''}
+      <label>${up ? 'Username' : 'Username or email'}<input name="u" required autocomplete="username"${up ? ' pattern="[a-zA-Z0-9._\\-]{3,30}" title="3 to 30 letters, numbers, dots, dashes or underscores"' : ''}></label>
+      <label>Password<input name="p" type="password" required minlength="8" autocomplete="${up ? 'new' : 'current'}-password"></label>
+      <button class="btn wide">${up ? 'Create account' : 'Sign in'}</button>
+      <p class="hint">${up ? 'Students can sign in right after signing up. Staff accounts start working once the administrator approves them.' : 'No account yet? Choose Sign up first.'}</p></form></section></main>`;
+  document.querySelectorAll('.tabs [data-m]').forEach(b => b.onclick = () => authView(b.dataset.m));
+  if (up) db.rpc('list_departments').then(({ data }) => {
+    const sel = $('#dep'); if (!sel) return; const l = data || [];
+    sel.innerHTML = l.length ? '<option value="">Choose your department</option>' + l.map(d => `<option value="${esc(d.id)}">${esc(d.name)}</option>`).join('') : '<option value="">No departments added yet</option>';
+    sel.disabled = !l.length; sel.required = l.length > 0;
+  });
+  $('#af').onsubmit = async e => {
+    e.preventDefault(); const f = new FormData(e.target), u = f.get('u').trim().toLowerCase(), btn = $('.btn', e.target), mail = u.includes('@') ? u : u + '@college.local';
+    btn.classList.add('load');
+    try {
+      if (up) {
+        const { error } = await db.auth.signUp({ email: mail, password: f.get('p'), options: { data: { full_name: f.get('n').trim(), role: f.get('r'), department_id: f.get('dep') || null } } });
+        if (error) throw error;
+        await db.auth.signOut(); toast('Account created. Sign in to continue.'); return authView('in');
+      }
+      const { data, error } = await db.auth.signInWithPassword({ email: mail, password: f.get('p') });
+      if (error) throw error;
+      boot(data.session);
+    } catch (er) { toast(/invalid login/i.test(er.message) ? 'Username or password is incorrect.' : er.message, 'err'); }
+    finally { btn.classList.remove('load'); }
+  };
+}
+function holdView(p) {
+  const pend = p?.status === 'pending';
+  $('#app').innerHTML = `<main class="hold card pad"><h2>${pend ? 'Waiting for approval' : 'Account unavailable'}</h2>
+    <p>${pend ? 'The administrator needs to approve your staff account before you can use it. Check back later.' : 'This account is not active. Contact the administrator.'}</p><button class="btn" id="o">Sign out</button></main>`;
+  $('#o').onclick = async () => { await db.auth.signOut(); authView('in'); };
+}
+async function boot(sess) {
+  try {
+    let session = sess;
+    if (!session) {
+      session = await Promise.race([db.auth.getSession().then(r => r.data.session), new Promise(r => setTimeout(() => r('timeout'), 8000))]);
+      if (session === 'timeout') { toast('Could not read your saved sign-in. Reload the page and try again.', 'err'); return authView('in'); }
+    }
+    if (!session) return authView('in');
+    const { data: p, error } = await db.from('profiles').select('*').eq('id', session.user.id).maybeSingle();
+    if (error) throw error;
+    if (!p || p.status !== 'active') return holdView(p);
+    S.p = p; await loadRef(); shell();
+  } catch (e) { console.error(e); toast('Signed in, but the app could not load: ' + (e.message || e), 'err'); }
+}
+async function loadRef() {
+  const [st, dep, cls, sub, dir, slots] = await Promise.all(['settings', 'departments', 'classes', 'subjects', 'staff_directory', 'period_slots'].map(t => ok(db.from(t).select('*'))));
+  Object.assign(S, { day: st[0].academic_day, dep, cls, sub, dir, slots });
+}
+
+/* ---------- shell ---------- */
+const NAV = {
+  admin: [['dash', 'Dashboard'], ['att', 'Attendance'], ['avail', 'Availability'], ['subs', 'Substitutions'], ['tt', 'Timetable'], ['staff', 'Staff'], ['dep', 'Departments'], ['cls', 'Classes'], ['sub', 'Subjects'], ['acc', 'Accounts']],
+  staff: [['my', 'My day'], ['mytt', 'My timetable'], ['hist', 'My attendance']],
+  student: [['stu', 'Today'], ['sttt', 'Timetable']]
+};
+function shell() {
+  const r = S.p.role;
+  $('#app').innerHTML = `<div class="shell"><aside><div class="brand">Staff Desk</div><nav>${NAV[r].map(([k, l]) => `<button data-v="${k}">${l}</button>`).join('')}</nav>
+    <div class="me"><b>${esc(S.p.full_name || S.p.username)}</b><small>${r}</small><button class="btn ghost" id="out">Sign out</button></div></aside><main id="view"></main></div>`;
+  document.querySelectorAll('nav button').forEach(b => b.onclick = () => go(b.dataset.v));
+  $('#out').onclick = async () => { await db.auth.signOut(); authView('in'); };
+  go(NAV[r][0][0]);
+}
+async function go(v) {
+  document.querySelectorAll('nav button').forEach(b => b.classList.toggle('on', b.dataset.v === v));
+  const el = $('#view'); el.innerHTML = '<div class="sk"></div><div class="sk"></div><div class="sk"></div>';
+  try { await V[v](el); } catch (e) { console.error(e); el.innerHTML = '<div class="empty">This page could not load. Check your connection and try again.</div>'; }
+}
+
+/* ---------- shared pieces ---------- */
+function slotTable(list, edit) {
+  if (!list.length) return '<div class="empty">No periods to show here yet.</div>';
+  return `<table><thead><tr><th>Period</th><th>Time</th><th>Class</th><th>Subject</th><th>Staff</th>${edit ? '<th></th>' : ''}</tr></thead><tbody>${list.map(s =>
+    `<tr><td>${s.period}</td><td>${tm(s.start_time)} to ${tm(s.end_time)}</td><td>${esc(nm(S.cls, s.class_id))}</td><td>${esc(nm(S.sub, s.subject_id))}</td><td>${esc(nm(S.dir, s.staff_id))}</td>${edit ? `<td class="act"><button class="btn sm ghost" data-p="${s.pattern}" data-n="${s.period}">Edit</button></td>` : ''}</tr>`).join('')}</tbody></table>`;
+}
+const slotF = [{ k: 'start_time', l: 'Start time', t: 'time' }, { k: 'end_time', l: 'End time', t: 'time' },
+  { k: 'class_id', l: 'Class', t: 'select', opts: () => S.cls.map(x => [x.id, x.name]) },
+  { k: 'subject_id', l: 'Subject', t: 'select', opts: () => S.sub.map(x => [x.id, x.name]) },
+  { k: 'staff_id', l: 'Staff member', t: 'select', opts: () => S.dir.map(x => [x.id, x.name]) }];
+function ttView(el, edit, mine) {
+  let p = patOf(S.day);
+  const draw = () => {
+    const list = patSlots(p).filter(s => !mine || s.staff_id === S.p.staff_id);
+    el.innerHTML = head('Timetable', `<small>Today is day ${S.day}, pattern ${patOf(S.day)}</small>`) +
+      `<div class="tabs">${[...PAT].map(x => `<button class="${x === p ? 'on' : ''}" data-t="${x}">${x}</button>`).join('')}</div><div class="card">${slotTable(list, edit)}</div>`;
+    el.querySelectorAll('[data-t]').forEach(b => b.onclick = () => { p = b.dataset.t; draw(); });
+    el.querySelectorAll('[data-n]').forEach(b => b.onclick = () => {
+      const s = S.slots.find(x => x.pattern === b.dataset.p && x.period === +b.dataset.n);
+      form(`Pattern ${s.pattern}, period ${s.period}`, slotF, s, async d => {
+        await ok(db.from('period_slots').update(d).eq('pattern', s.pattern).eq('period', s.period));
+        S.slots = await ok(db.from('period_slots').select('*')); toast('Period saved.'); draw();
+      });
+    });
+  };
+  draw();
+}
+async function availPanel(box, sid, d) {
+  const rows = await ok(db.from('availability').select('*').eq('staff_id', sid).eq('day', d));
+  const m = Object.fromEntries(rows.map(r => [r.period, r.status]));
+  box.innerHTML = `<div class="pers">${[1, 2, 3, 4, 5].map(p => `<div class="per"><b>Period ${p}</b><select data-p="${p}">${['', 'available', 'unavailable', 'free', 'unable'].map(s =>
+    `<option value="${s}"${(m[p] || '') === s ? ' selected' : ''}>${s ? BADGE[s] : 'Not set'}</option>`).join('')}</select></div>`).join('')}</div>`;
+  box.querySelectorAll('select').forEach(sel => sel.onchange = async () => {
+    const p = +sel.dataset.p;
+    await ok(sel.value ? db.from('availability').upsert({ staff_id: sid, day: d, period: p, status: sel.value }, { onConflict: 'staff_id,day,period' })
+      : db.from('availability').delete().eq('staff_id', sid).eq('day', d).eq('period', p));
+    toast('Availability saved.');
+  });
+}
+function needList(att, av, subs) {
+  const pat = patOf(S.day);
+  return patSlots(pat).filter(s => s.staff_id).map(s => {
+    const absent = att.some(a => a.staff_id === s.staff_id && a.status === 'absent');
+    const unable = av.some(a => a.staff_id === s.staff_id && a.period === s.period && a.status === 'unable');
+    return { slot: s, reason: absent ? 'absent' : unable ? 'unable' : null, sub: subs.find(x => x.pattern === pat && x.period === s.period && x.status === 'assigned') };
+  }).filter(n => n.reason);
+}
+
+/* ---------- generic add/edit tables ---------- */
+const CR = {
+  dep: { t: 'departments', title: 'Departments', o: 'name', active: 1, f: [{ k: 'name', l: 'Department name', req: 1 }], c: [['name', 'Name']] },
+  cls: { t: 'classes', title: 'Classes', o: 'name', f: [{ k: 'name', l: 'Class name', req: 1 }, { k: 'department_id', l: 'Department', t: 'select', opts: depOpts }],
+    c: [['name', 'Name'], ['department_id', 'Department', v => nm(S.dep, v)]] },
+  sub: { t: 'subjects', title: 'Subjects', o: 'name', f: [{ k: 'name', l: 'Subject name', req: 1 }], c: [['name', 'Name']] },
+  staff: { t: 'staff', title: 'Staff', o: 'name', active: 1,
+    f: [{ k: 'staff_code', l: 'Staff ID', req: 1 }, { k: 'name', l: 'Staff name', req: 1 }, { k: 'email', l: 'Email', t: 'email' }, { k: 'phone', l: 'Phone number', t: 'tel' },
+      { k: 'designation', l: 'Designation' }, { k: 'department_id', l: 'Department', t: 'select', opts: depOpts }],
+    c: [['staff_code', 'Staff ID'], ['name', 'Name'], ['department_id', 'Department', v => nm(S.dep, v)], ['designation', 'Designation'], ['email', 'Email'], ['phone', 'Phone']] }
+};
+async function crud(el, c) {
+  let rows = await ok(db.from(c.t).select('*').order(c.o)), q = '', df = '';
+  const hasDep = c.f.some(f => f.k === 'department_id');
+  el.innerHTML = head(c.title, `<div class="tools"><input id="q" placeholder="Search">${hasDep ? `<select id="df"><option value="">All departments</option>${depOpts().map(([a, b]) => `<option value="${a}">${esc(b)}</option>`).join('')}</select>` : ''}<button class="btn" id="add">Add</button></div>`) + '<div class="card" id="tb"></div>';
+  const refresh = async () => { rows = await ok(db.from(c.t).select('*').order(c.o)); await loadRef(); draw(); };
+  const draw = () => {
+    const l = rows.filter(r => JSON.stringify(Object.values(r)).toLowerCase().includes(q) && (!df || r.department_id === df));
+    $('#tb', el).innerHTML = l.length ? `<table><thead><tr>${c.c.map(x => `<th>${x[1]}</th>`).join('')}${c.active ? '<th>Status</th>' : ''}<th></th></tr></thead><tbody>${l.map(r =>
+      `<tr class="${r.active === false ? 'dim' : ''}">${c.c.map(x => `<td>${esc(x[2] ? x[2](r[x[0]]) : r[x[0]])}</td>`).join('')}${c.active ? `<td>${badge(r.active ? 'active' : 'inactive')}</td>` : ''}
+      <td class="act"><button class="btn sm ghost" data-e="${r.id}">Edit</button>${c.active ? `<button class="btn sm ghost" data-t="${r.id}">${r.active ? 'Deactivate' : 'Reactivate'}</button>` : ''}</td></tr>`).join('')}</tbody></table>`
+      : '<div class="empty">Nothing here yet. Use Add to create the first entry.</div>';
+    el.querySelectorAll('[data-e]').forEach(b => b.onclick = () => { const r = rows.find(x => x.id === b.dataset.e);
+      form('Edit ' + c.title.toLowerCase(), c.f, r, async d => { await ok(db.from(c.t).update(d).eq('id', r.id)); toast('Saved.'); await refresh(); }); });
+    el.querySelectorAll('[data-t]').forEach(b => b.onclick = () => { const r = rows.find(x => x.id === b.dataset.t);
+      confirmBox(`${r.active ? 'Deactivate' : 'Reactivate'} ${r.name}?`, async () => { await ok(db.from(c.t).update({ active: !r.active }).eq('id', r.id)); toast('Status updated.'); await refresh(); }); });
+  };
+  $('#q', el).oninput = e => { q = e.target.value.toLowerCase(); draw(); };
+  if (hasDep) $('#df', el).onchange = e => { df = e.target.value; draw(); };
+  $('#add', el).onclick = () => form('Add ' + c.title.toLowerCase(), c.f, {}, async d => { await ok(db.from(c.t).insert(d)); toast('Added.'); await refresh(); });
+  draw();
+}
+for (const k in CR) V[k] = el => crud(el, CR[k]);
+
+/* ---------- administrator ---------- */
+V.dash = async el => {
+  const d = today(), pat = patOf(S.day);
+  const [st, att, av, subs] = await Promise.all([ok(db.from('staff').select('id').eq('active', true)), ok(db.from('attendance').select('*').eq('day', d)),
+    ok(db.from('availability').select('*').eq('day', d)), ok(db.from('substitutions').select('*').eq('day', d))]);
+  const need = needList(att, av, subs), u = s => new Set(av.filter(x => x.status === s).map(x => x.staff_id)).size;
+  const cards = [['Total staff', st.length], ['Present today', att.filter(a => a.status === 'present').length], ['Absent today', att.filter(a => a.status === 'absent').length],
+    ['Available', u('available')], ['Unable to attend', u('unable')], ['Need a substitute', need.filter(n => !n.sub).length], ['Departments', S.dep.filter(x => x.active).length]];
+  el.innerHTML = head(`Day ${S.day}, pattern ${pat}`, `<div class="tools"><button class="btn ghost" id="pv">Previous day</button><button class="btn ghost" id="nx">Next day</button><button class="btn" id="st">Set day</button></div>`) +
+    `<div class="grid">${cards.map(([l, n]) => `<div class="stat"><b data-n="${n}">0</b><span>${l}</span></div>`).join('')}</div><div class="card pad"><h3>Today's timetable</h3></div>`;
+  $('.card', el).insertAdjacentHTML('beforeend', slotTable(patSlots(pat)));
+  el.querySelectorAll('[data-n]').forEach(count);
+  const setDay = async n => { if (n < 1) return toast('Day 1 is the first academic day.', 'err'); await ok(db.from('settings').update({ academic_day: n }).eq('id', 1)); S.day = n; toast(`Now on day ${n}, pattern ${patOf(n)}.`); V.dash(el); };
+  $('#pv', el).onclick = () => setDay(S.day - 1); $('#nx', el).onclick = () => setDay(S.day + 1);
+  $('#st', el).onclick = () => form('Set academic day', [{ k: 'n', l: 'Day number', t: 'number', req: 1, min: 1 }], { n: S.day }, d => setDay(+d.n));
+};
+V.att = async el => {
+  el.innerHTML = head('Attendance', `<div class="tools"><input type="date" id="d" value="${today()}"><input id="q" placeholder="Search staff"><select id="df"><option value="">All departments</option>${depOpts().map(([a, b]) => `<option value="${a}">${esc(b)}</option>`).join('')}</select></div>`) + '<div class="card" id="tb"></div>';
+  const draw = async () => {
+    const d = $('#d', el).value, q = $('#q', el).value.toLowerCase(), df = $('#df', el).value;
+    const m = Object.fromEntries((await ok(db.from('attendance').select('*').eq('day', d))).map(r => [r.staff_id, r.status]));
+    const l = S.dir.filter(s => s.name.toLowerCase().includes(q) && (!df || s.department_id === df));
+    $('#tb', el).innerHTML = l.length ? `<table><thead><tr><th>Name</th><th>Department</th><th>Status</th><th></th></tr></thead><tbody>${l.map(s => `<tr><td>${esc(s.name)}</td><td>${esc(nm(S.dep, s.department_id))}</td>
+      <td>${m[s.id] ? badge(m[s.id]) : '<span class="mut">Not marked</span>'}</td><td class="act">${['present', 'absent'].map(v => `<button class="btn sm ghost${m[s.id] === v ? ' sel' : ''}" data-s="${s.id}" data-v="${v}">${BADGE[v]}</button>`).join('')}</td></tr>`).join('')}</tbody></table>`
+      : '<div class="empty">No staff match. Add staff in the Staff section first.</div>';
+    el.querySelectorAll('[data-s]').forEach(b => b.onclick = async () => { await ok(db.from('attendance').upsert({ staff_id: b.dataset.s, day: d, status: b.dataset.v }, { onConflict: 'staff_id,day' })); toast('Attendance updated.'); draw(); });
+  };
+  ['d', 'q', 'df'].forEach(i => $('#' + i, el).oninput = draw); draw();
+};
+V.avail = async el => {
+  if (!S.dir.length) return el.innerHTML = head('Availability') + '<div class="empty">Add staff first, then manage their availability here.</div>';
+  el.innerHTML = head('Availability', `<div class="tools"><select id="s">${S.dir.map(s => `<option value="${s.id}">${esc(s.name)}</option>`).join('')}</select><input type="date" id="d" value="${today()}"></div>`) + '<div class="card pad" id="av"></div>';
+  const draw = () => availPanel($('#av', el), $('#s', el).value, $('#d', el).value);
+  $('#s', el).onchange = $('#d', el).onchange = draw; draw();
+};
+V.subs = async el => {
+  const d = today(), pat = patOf(S.day);
+  const [att, av, all] = await Promise.all([ok(db.from('attendance').select('*').eq('day', d)), ok(db.from('availability').select('*').eq('day', d)),
+    ok(db.from('substitutions').select('*').order('day', { ascending: false }).limit(100))]);
+  const subs = all.filter(x => x.day === d), need = needList(att, av, subs);
+  const cands = n => S.dir.filter(s => s.id !== n.slot.staff_id && !att.some(a => a.staff_id === s.id && a.status === 'absent')
+    && !av.some(a => a.staff_id === s.id && a.period === n.slot.period && ['unavailable', 'unable'].includes(a.status))
+    && !subs.some(x => x.period === n.slot.period && x.status === 'assigned' && x.substitute_id === s.id)).map(s => [s.id, s.name]);
+  const slotOf = x => S.slots.find(s => s.pattern === x.pattern && s.period === x.period) || {};
+  el.innerHTML = head('Substitutions', `<small>Day ${S.day}, pattern ${pat}</small>`) +
+    `<div class="card pad"><h3>Needing attention today</h3>${need.length ? `<table><thead><tr><th>Period</th><th>Class</th><th>Subject</th><th>Original staff</th><th>Reason</th><th>Substitute</th><th>Status</th><th></th></tr></thead><tbody>${need.map((n, i) =>
+      `<tr><td>${n.slot.period}</td><td>${esc(nm(S.cls, n.slot.class_id))}</td><td>${esc(nm(S.sub, n.slot.subject_id))}</td><td>${esc(nm(S.dir, n.slot.staff_id))}</td><td>${badge(n.reason)}</td>
+      <td>${n.sub ? esc(nm(S.dir, n.sub.substitute_id)) : '—'}</td><td>${badge(n.sub ? 'assigned' : 'req')}</td><td class="act"><button class="btn sm" data-a="${i}">${n.sub ? 'Change' : 'Assign'}</button>${n.sub ? `<button class="btn sm ghost" data-c="${i}">Cancel</button>` : ''}</td></tr>`).join('')}</tbody></table>`
+      : '<div class="empty">No classes need a substitute right now.</div>'}</div>
+    <div class="card pad"><h3>History</h3>${all.length ? `<table><thead><tr><th>Date</th><th>Pattern</th><th>Period</th><th>Class</th><th>Subject</th><th>Original staff</th><th>Substitute</th><th>Status</th></tr></thead><tbody>${all.map(x => { const s = slotOf(x);
+      return `<tr><td>${x.day}</td><td>${x.pattern}</td><td>${x.period}</td><td>${esc(nm(S.cls, s.class_id))}</td><td>${esc(nm(S.sub, s.subject_id))}</td><td>${esc(nm(S.dir, s.staff_id))}</td><td>${esc(nm(S.dir, x.substitute_id))}</td><td>${badge(x.status)}</td></tr>`; }).join('')}</tbody></table>` : '<div class="empty">No substitutions recorded yet.</div>'}</div>`;
+  el.querySelectorAll('[data-a]').forEach(b => b.onclick = () => { const n = need[+b.dataset.a];
+    form(`Substitute for period ${n.slot.period}`, [{ k: 'sid', l: 'Available staff', t: 'select', opts: () => cands(n) }], { sid: n.sub?.substitute_id }, async v => {
+      if (!v.sid) { toast('Choose a staff member.', 'err'); throw 0; }
+      await ok(db.from('substitutions').upsert({ day: d, pattern: pat, period: n.slot.period, substitute_id: v.sid, status: 'assigned' }, { onConflict: 'day,pattern,period' }));
+      toast('Substitute assigned.'); V.subs(el); }); });
+  el.querySelectorAll('[data-c]').forEach(b => b.onclick = () => { const n = need[+b.dataset.c];
+    confirmBox('Cancel this substitution?', async () => { await ok(db.from('substitutions').update({ status: 'cancelled' }).eq('day', d).eq('pattern', pat).eq('period', n.slot.period)); toast('Substitution cancelled.'); V.subs(el); }); });
+};
+V.tt = el => ttView(el, true);
+V.acc = async el => {
+  const [pr, st] = await Promise.all([ok(db.from('profiles').select('*').order('username')), ok(db.from('staff').select('id,name,staff_code').eq('active', true))]);
+  el.innerHTML = head('Accounts', '<small>People who signed up. Link each staff account to its staff record, then approve it.</small>') +
+    `<div class="card">${pr.length ? `<table><thead><tr><th>Username</th><th>Name</th><th>Role</th><th>Department</th><th>Staff record</th><th>Status</th><th></th></tr></thead><tbody>${pr.map(p =>
+      `<tr><td>${esc(p.username)}</td><td>${esc(p.full_name)}</td><td>${p.role}</td><td>${esc(nm(S.dep, p.department_id))}</td><td>${p.role === 'staff' ? `<select data-l="${p.id}"><option value="">Not linked</option>${st.map(s => `<option value="${s.id}"${s.id === p.staff_id ? ' selected' : ''}>${esc(s.staff_code + ' ' + s.name)}</option>`).join('')}</select>` : '—'}</td>
+      <td>${badge(p.status)}</td><td class="act">${p.role === 'admin' ? '' : p.status === 'active' ? `<button class="btn sm ghost" data-a="${p.id}" data-s="inactive">Deactivate</button>` : `<button class="btn sm" data-a="${p.id}" data-s="active">${p.status === 'pending' ? 'Approve' : 'Reactivate'}</button>`}</td></tr>`).join('')}</tbody></table>` : '<div class="empty">No accounts yet.</div>'}</div>`;
+  el.querySelectorAll('[data-l]').forEach(s => s.onchange = async () => { await ok(db.from('profiles').update({ staff_id: s.value || null }).eq('id', s.dataset.l)); toast('Staff record linked.'); });
+  el.querySelectorAll('[data-a]').forEach(b => b.onclick = async () => {
+    const p = pr.find(x => x.id === b.dataset.a), link = el.querySelector(`[data-l="${p.id}"]`);
+    if (p.role === 'staff' && b.dataset.s === 'active' && !link.value) return toast('Link a staff record first.', 'err');
+    await ok(db.from('profiles').update({ status: b.dataset.s }).eq('id', p.id)); toast('Account updated.'); V.acc(el);
+  });
+};
+
+/* ---------- staff ---------- */
+V.my = async el => {
+  const d = today(), me = S.p.staff_id, pat = patOf(S.day);
+  const [a, subs] = await Promise.all([ok(db.from('attendance').select('*').eq('staff_id', me).eq('day', d)), ok(db.from('substitutions').select('*').eq('day', d).eq('status', 'assigned'))]);
+  const lines = subs.map(x => { const s = S.slots.find(z => z.pattern === x.pattern && z.period === x.period); if (!s) return '';
+    if (x.substitute_id === me) return `You are covering period ${x.period}, ${nm(S.cls, s.class_id)} (${nm(S.sub, s.subject_id)}), for ${nm(S.dir, s.staff_id)}.`;
+    if (s.staff_id === me) return `${nm(S.dir, x.substitute_id)} is covering your period ${x.period}, ${nm(S.cls, s.class_id)}.`; return ''; }).filter(Boolean);
+  el.innerHTML = head('My day', `<small>Day ${S.day}, pattern ${pat}</small>`) +
+    `<div class="card pad"><h3>Attendance today</h3><div class="big"><span id="cur"></span>${['present', 'absent'].map(v => `<button class="btn ghost" data-v="${v}">${BADGE[v]}</button>`).join('')}</div></div>
+    <div class="card pad"><h3>Availability by period</h3><div id="av"></div></div>
+    <div class="card pad"><h3>Substitutions</h3>${lines.length ? `<ul>${lines.map(l => `<li>${esc(l)}</li>`).join('')}</ul>` : '<span class="mut">Nothing to cover or hand over today.</span>'}</div>
+    <div class="card pad"><h3>My classes today</h3></div>`;
+  $('.card:last-child', el).insertAdjacentHTML('beforeend', slotTable(patSlots(pat).filter(s => s.staff_id === me)));
+  const show = s => { $('#cur', el).innerHTML = s ? badge(s) : '<span class="mut">Not marked yet</span>'; el.querySelectorAll('[data-v]').forEach(b => b.classList.toggle('sel', b.dataset.v === s)); };
+  show(a[0]?.status);
+  el.querySelectorAll('[data-v]').forEach(b => b.onclick = async () => { await ok(db.from('attendance').upsert({ staff_id: me, day: d, status: b.dataset.v }, { onConflict: 'staff_id,day' })); show(b.dataset.v); toast('Attendance saved.'); });
+  availPanel($('#av', el), me, d);
+};
+V.mytt = el => ttView(el, false, true);
+V.hist = async el => {
+  const r = await ok(db.from('attendance').select('*').eq('staff_id', S.p.staff_id).order('day', { ascending: false }).limit(60));
+  el.innerHTML = head('My attendance') + `<div class="card">${r.length ? `<table><thead><tr><th>Date</th><th>Status</th></tr></thead><tbody>${r.map(x => `<tr><td>${x.day}</td><td>${badge(x.status)}</td></tr>`).join('')}</tbody></table>` : '<div class="empty">No attendance marked yet. Mark today on the My day page.</div>'}</div>`;
+};
+
+/* ---------- student (read-only) ---------- */
+V.stu = async el => {
+  const d = today(), pat = patOf(S.day);
+  const [att, av, subs] = await Promise.all([ok(db.from('attendance').select('*').eq('day', d)), ok(db.from('availability').select('*').eq('day', d)), ok(db.from('substitutions').select('*').eq('day', d).eq('status', 'assigned'))]);
+  const names = st => att.filter(a => a.status === st).map(a => nm(S.dir, a.staff_id)).sort();
+  const ul = a => `<ul>${a.length ? a.map(n => `<li>${esc(n)}</li>`).join('') : '<li class="mut">No one marked yet</li>'}</ul>`;
+  const flags = av.filter(a => ['unable', 'unavailable'].includes(a.status)).sort((a, b) => a.period - b.period);
+  el.innerHTML = head('Today', `<small>Day ${S.day}, pattern ${pat}</small>`) +
+    `<div class="two"><div class="card pad"><h3>Staff present</h3>${ul(names('present'))}</div><div class="card pad"><h3>Staff absent</h3>${ul(names('absent'))}</div></div>
+    <div class="card pad"><h3>Staff availability</h3>${flags.length ? `<ul>${flags.map(a => `<li>${esc(nm(S.dir, a.staff_id))}, period ${a.period} ${badge(a.status)}</li>`).join('')}</ul>` : '<span class="mut">Everyone who has set their availability is available.</span>'}</div>
+    <div class="card pad"><h3>Substitutions</h3>${subs.length ? `<table><thead><tr><th>Period</th><th>Class</th><th>Original staff</th><th>Substitute</th></tr></thead><tbody>${subs.map(x => { const s = S.slots.find(z => z.pattern === x.pattern && z.period === x.period) || {};
+      return `<tr><td>${x.period}</td><td>${esc(nm(S.cls, s.class_id))}</td><td>${esc(nm(S.dir, s.staff_id))}</td><td>${esc(nm(S.dir, x.substitute_id))}</td></tr>`; }).join('')}</tbody></table>` : '<span class="mut">No substitutions today.</span>'}</div>`;
+};
+V.sttt = el => ttView(el, false);
+
+/* ---------- start ---------- */
+
+function setupView() {
+  const sql = document.getElementById('schema').textContent;
+  $('#app').innerHTML = `<main class="hold card pad" style="max-width:760px;margin:6vh auto"><h2>Connect your database</h2>
+    <p>Set <b>SUPABASE_URL</b> and <b>SUPABASE_ANON_KEY</b> near the top of this file's script, then run the SQL below once in Supabase, under SQL Editor.</p>
+    <button class="btn" id="cp">Copy setup SQL</button><pre class="sql">${esc(sql)}</pre></main>`;
+  $('#cp').onclick = async () => { try { await navigator.clipboard.writeText(sql); toast('Setup SQL copied.'); } catch (_) { toast('Select the SQL and copy it by hand.', 'err'); } };
+}
+SUPABASE_URL.includes('YOUR-PROJECT') ? setupView() : boot();
+
+</script>
+</body>
+</html>
